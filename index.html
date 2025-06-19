@@ -1,110 +1,905 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>My Gaming Hub</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FreeSearch</title>
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; padding: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+  a {
+    color: #64b5f6;
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
 
-  <!-- Lexend Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet">
+  /* Sidebar */
+  #sidebar {
+    width: 280px;
+    background: #1e1e1e;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #333;
+    transition: transform 0.3s ease;
+    z-index: 3;
+  }
+  #sidebar.collapsed {
+    transform: translateX(-280px);
+  }
+  #sidebarHeader {
+    padding: 1rem;
+    font-weight: 700;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #sidebarHeader > div {
+    user-select: text;
+  }
+  #sidebarToggleBtn {
+    background: none;
+    border: none;
+    color: #64b5f6;
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0 0.5rem;
+    user-select: none;
+  }
 
-  <style>
-    body {
-      background-color: #000;
-      color: #fff;
-      font-family: 'Lexend', sans-serif;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-    }
+  /* Chats list */
+  #chatList {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+  }
+  .chatItem {
+    padding: 0.6rem 1rem;
+    border-left: 4px solid transparent;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    transition: background-color 0.15s ease;
+  }
+  .chatItem:hover {
+    background-color: #2c2c2c;
+  }
+  .chatItem.active {
+    background-color: #64b5f6;
+    color: #121212;
+    border-left-color: #90caf9;
+  }
+  .chatTitle {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .chatOptionsBtn {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 0.3rem;
+    user-select: none;
+  }
+  .chatOptionsMenu {
+    position: absolute;
+    background: #333;
+    box-shadow: 0 0 10px rgba(0,0,0,0.7);
+    border-radius: 6px;
+    padding: 0.3rem 0;
+    display: none;
+    z-index: 5;
+  }
+  .chatOptionsMenu.show {
+    display: block;
+  }
+  .chatOptionsMenu button {
+    background: none;
+    border: none;
+    color: #e0e0e0;
+    padding: 0.4rem 1.2rem;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .chatOptionsMenu button:hover {
+    background: #555;
+  }
 
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 40px;
-    }
+  /* Main chat area */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #121212;
+  }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 30px;
-      justify-items: center;
-    }
+  /* Header inside main */
+  #mainHeader {
+    padding: 1rem;
+    font-weight: 700;
+    font-size: 1.3rem;
+    border-bottom: 1px solid #333;
+    color: #64b5f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-    .game {
-      background-color: #111;
-      border-radius: 10px;
-      padding: 15px;
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
+  /* Chat messages */
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.5rem;
+  }
+  .msg {
+    margin: 0.6rem 0;
+    padding: 10px 14px;
+    border-radius: 20px;
+    max-width: 70%;
+    line-height: 1.4em;
+    white-space: pre-wrap;
+    font-size: 0.95rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .user {
+    background: #64b5f6;
+    color: #121212;
+    margin-left: auto;
+    text-align: right;
+    border-bottom-right-radius: 0;
+  }
+  .bot {
+    background: #333;
+    color: #e0e0e0;
+    margin-right: auto;
+    border-bottom-left-radius: 0;
+  }
 
-    .game:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px #00ffcc;
-    }
+  /* Input area */
+  #inputArea {
+    padding: 1rem;
+    background: #1e1e1e;
+    display: flex;
+    gap: 0.7rem;
+    border-top: 1px solid #333;
+  }
+  #input {
+    flex: 1;
+    padding: 10px 15px;
+    border-radius: 30px;
+    border: none;
+    font-size: 1rem;
+    background: #2a2a2a;
+    color: #e0e0e0;
+    outline: none;
+    transition: background-color 0.3s ease;
+  }
+  #input::placeholder {
+    color: #aaa;
+  }
+  #sendBtn, #newChatBtn, #refreshChatsBtn {
+    border: none;
+    background: #64b5f6;
+    color: #121212;
+    padding: 0 1.3rem;
+    border-radius: 30px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.25s ease;
+  }
+  #sendBtn:hover, #newChatBtn:hover, #refreshChatsBtn:hover {
+    background-color: #90caf9;
+  }
 
-    .game img {
-      width: 120px;
-      height: 120px;
-      object-fit: contain;
-      margin-bottom: 10px;
-    }
+  /* Settings overlay */
+  #settingsOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(18,18,18,0.95);
+    color: #e0e0e0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    z-index: 10;
+  }
+  #settingsOverlay.show {
+    display: flex;
+  }
+  #settingsContent {
+    background: #1e1e1e;
+    border-radius: 12px;
+    max-width: 480px;
+    width: 90%;
+    padding: 1.5rem;
+    box-shadow: 0 0 20px rgba(0,0,0,0.9);
+  }
+  #settingsContent h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .settingRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.8rem 0;
+  }
+  .settingRow label {
+    font-size: 1rem;
+  }
+  .settingRow input[type=checkbox] {
+    transform: scale(1.3);
+    cursor: pointer;
+  }
+  #closeSettingsBtn {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 0.8rem;
+    font-weight: 700;
+    border-radius: 10px;
+    border: none;
+    background: #64b5f6;
+    color: #121212;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.25s ease;
+  }
+  #closeSettingsBtn:hover {
+    background-color: #90caf9;
+  }
+  #clearCookiesBtn {
+    margin-top: 0.5rem;
+    width: 100%;
+    padding: 0.6rem;
+    font-weight: 700;
+    border-radius: 10px;
+    border: none;
+    background: #e53935;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  #clearCookiesBtn:hover {
+    background-color: #ef5350;
+  }
+  #inquiryLink {
+    margin-top: 1rem;
+    text-align: center;
+  }
 
-    .game a {
-      text-decoration: none;
-      color: #0ff;
-      font-size: 1rem;
-      display: block;
-    }
-  </style>
+  /* Cookie Consent Banner */
+  #cookieConsentBanner {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #1e1e1e;
+    border-top: 1px solid #333;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 11;
+    font-size: 0.9rem;
+    user-select: none;
+  }
+  #cookieConsentBanner p {
+    margin: 0;
+    max-width: 80%;
+  }
+  #acceptCookiesBtn {
+    background: #64b5f6;
+    border: none;
+    color: #121212;
+    font-weight: 700;
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #acceptCookiesBtn:hover {
+    background-color: #90caf9;
+  }
+
+  /* Dark mode light variant */
+  body.light {
+    background-color: #f0f0f0;
+    color: #121212;
+  }
+  body.light #sidebar {
+    background: #ffffff;
+    border-right: 1px solid #ccc;
+  }
+  body.light #mainHeader {
+    color: #1976d2;
+  }
+  body.light .chatItem {
+    color: #121212;
+  }
+  body.light .chatItem.active {
+    background-color: #bbdefb;
+    color: #0d47a1;
+    border-left-color: #64b5f6;
+  }
+  body.light #chat {
+    background: #fafafa;
+  }
+  body.light .msg.user {
+    background: #90caf9;
+    color: #121212;
+  }
+  body.light .msg.bot {
+    background: #e0e0e0;
+    color: #121212;
+  }
+  body.light #inputArea {
+    background: #eaeaea;
+    border-top: 1px solid #ccc;
+  }
+  body.light #input {
+    background: #fff;
+    color: #121212;
+    border: 1px solid #ccc;
+  }
+  body.light #sendBtn, body.light #newChatBtn, body.light #refreshChatsBtn {
+    background: #1976d2;
+    color: #fff;
+  }
+  body.light #sendBtn:hover, body.light #newChatBtn:hover, body.light #refreshChatsBtn:hover {
+    background-color: #4791db;
+  }
+  body.light #settingsContent {
+    background: #fff;
+    color: #121212;
+    box-shadow: 0 0 20px rgba(0,0,0,0.15);
+  }
+  body.light #settingsOverlay {
+    background: rgba(255,255,255,0.95);
+  }
+  body.light #clearCookiesBtn {
+    background: #d32f2f;
+    color: #fff;
+  }
+  body.light #clearCookiesBtn:hover {
+    background-color: #ef5350;
+  }
+  body.light #cookieConsentBanner {
+    background: #ffffff;
+    border-top: 1px solid #ccc;
+    color: #121212;
+  }
+  body.light #acceptCookiesBtn {
+    background: #1976d2;
+    color: #fff;
+  }
+  body.light #acceptCookiesBtn:hover {
+    background-color: #4791db;
+  }
+</style>
 </head>
 <body>
 
-  <h1>My Gaming Hub</h1>
-
-  <div class="grid">
-    <div class="game">
-      <a href="https://eaglecraft.net/" target="_blank">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Minecraft_icon.svg/2048px-Minecraft_icon.svg.png" alt="Eaglecraft">
-        Eaglecraft
-      </a>
-    </div>
-
-    <div class="game">
-      <a href="https://www.minecraft.net/" target="_blank">
-        <img src="https://upload.wikimedia.org/wikipedia/en/5/51/Minecraft_cover.png" alt="Minecraft">
-        Minecraft
-      </a>
-    </div>
-
-    <div class="game">
-      <a href="https://bloxd.io/" target="_blank">
-        <img src="https://bloxd.io/assets/img/bloxdio_logo.png" alt="Bloxd.io">
-        Bloxd.io
-      </a>
-    </div>
-
-    <div class="game">
-      <a href="https://www.xbox.com/en-CA/play" target="_blank">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/4/43/Xbox_one_logo.svg" alt="Xbox Cloud Gaming">
-        Xbox Cloud Gaming
-      </a>
-    </div>
-
-    <div class="game">
-      <a href="https://poki.com/" target="_blank">
-        <img src="https://poki.com/favicon.ico" alt="Poki">
-        Poki
-      </a>
-    </div>
-
-    <div class="game">
-      <a href="https://www.crazygames.com/" target="_blank">
-        <img src="https://www.crazygames.com/favicon.ico" alt="Crazy Games">
-        Crazy Games
-      </a>
+<!-- Sidebar -->
+<div id="sidebar" class="collapsed" aria-label="Chat sidebar">
+  <div id="sidebarHeader">
+    <div>Chats</div>
+    <div>
+      <button id="newChatBtn" title="New Chat" aria-label="Start new chat">➕</button>
+      <button id="refreshChatsBtn" title="Refresh Chats" aria-label="Refresh chat list">🔄</button>
+      <button id="sidebarToggleBtn" aria-label="Toggle chat sidebar">☰</button>
     </div>
   </div>
+  <div id="chatList" role="list" aria-live="polite"></div>
+</div>
+
+<!-- Main content -->
+<div id="main" role="main" aria-label="Chat area">
+  <div id="mainHeader">
+    <span id="chatTitle">Welcome to FreeSearch</span>
+    <button id="settingsBtn" aria-label="Open settings">⚙️</button>
+  </div>
+  <div id="chat" role="log" aria-live="polite" aria-relevant="additions"></div>
+  <div id="inputArea">
+    <input id="input" type="text" autocomplete="off" placeholder="Ask me anything educational..." aria-label="Chat input" />
+    <button id="sendBtn" aria-label="Send message">Send</button>
+  </div>
+</div>
+
+<!-- Settings overlay -->
+<div id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" tabindex="-1">
+  <div id="settingsContent">
+    <h2 id="settingsTitle">Settings</h2>
+    <div class="settingRow">
+      <label for="darkModeToggle">Dark Mode</label>
+      <input type="checkbox" id="darkModeToggle" />
+    </div>
+    <div class="settingRow">
+      <label for="saveChatsToggle">Save Chats</label>
+      <input type="checkbox" id="saveChatsToggle" />
+    </div>
+    <div class="settingRow">
+      <label for="inquiryBtn">Send Inquiry / Feedback</label>
+      <button id="inquiryBtn" style="cursor:pointer; background:#64b5f6; color:#121212; border:none; border-radius:6px; padding:6px 12px; font-weight:bold;">Open Form</button>
+    </div>
+    <button id="clearCookiesBtn" title="Clear all saved data">Clear Cookies & Data</button>
+    <button id="closeSettingsBtn" aria-label="Close settings">Close</button>
+  </div>
+</div>
+
+<!-- Cookie Consent -->
+<div id="cookieConsentBanner" role="alert" aria-live="assertive" aria-atomic="true">
+  <p>We use cookies to save your settings and chat history. By continuing, you accept our cookie policy.</p>
+  <button id="acceptCookiesBtn" aria-label="Accept cookies">Accept</button>
+</div>
+
+<script>
+(() => {
+  // Utility for cookies (simple)
+  const cookieUtil = {
+    set: (name, val, days = 365) => {
+      const expires = new Date(Date.now() + days*864e5).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(val)}; expires=${expires}; path=/; SameSite=Lax`;
+    },
+    get: (name) => {
+      return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+      }, '');
+    },
+    del: (name) => {
+      document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax';
+    }
+  };
+
+  // Elements
+  const sidebar = document.getElementById('sidebar');
+  const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+  const chatListEl = document.getElementById('chatList');
+  const mainHeaderTitle = document.getElementById('chatTitle');
+  const chatContainer = document.getElementById('chat');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('sendBtn');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const refreshChatsBtn = document.getElementById('refreshChatsBtn');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsOverlay = document.getElementById('settingsOverlay');
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  const saveChatsToggle = document.getElementById('saveChatsToggle');
+  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+  const clearCookiesBtn = document.getElementById('clearCookiesBtn');
+  const inquiryBtn = document.getElementById('inquiryBtn');
+  const cookieConsentBanner = document.getElementById('cookieConsentBanner');
+  const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
+
+  // State
+  let chats = [];
+  let activeChatId = null;
+  let cookieConsentGiven = false;
+  let chatOptionsOpenId = null;
+
+  // Sanitize text for HTML insertion
+  function sanitize(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Save all chats & settings to cookies
+  function saveToCookies() {
+    if (!cookieConsentGiven) return;
+    cookieUtil.set('freesearch_chats', JSON.stringify(chats));
+    cookieUtil.set('freesearch_activeChatId', activeChatId || '');
+    cookieUtil.set('freesearch_darkMode', document.body.classList.contains('light') ? 'false' : 'true');
+    cookieUtil.set('freesearch_saveChats', saveChatsToggle.checked ? 'true' : 'false');
+  }
+
+  // Load chats & settings from cookies
+  function loadFromCookies() {
+    if (!cookieConsentGiven) return;
+    const rawChats = cookieUtil.get('freesearch_chats');
+    if (rawChats) {
+      try {
+        chats = JSON.parse(rawChats) || [];
+      } catch {
+        chats = [];
+      }
+    }
+    const savedActiveChat = cookieUtil.get('freesearch_activeChatId');
+    if (savedActiveChat && chats.some(c => c.id === savedActiveChat)) {
+      activeChatId = savedActiveChat;
+    } else if (chats.length) {
+      activeChatId = chats[0].id;
+    }
+    // Dark mode cookie
+    const darkModeCookie = cookieUtil.get('freesearch_darkMode');
+    if (darkModeCookie === 'true') {
+      document.body.classList.remove('light');
+      darkModeToggle.checked = false;
+    } else if (darkModeCookie === 'false') {
+      document.body.classList.add('light');
+      darkModeToggle.checked = true;
+    }
+    // Save chats toggle
+    const saveChatsCookie = cookieUtil.get('freesearch_saveChats');
+    if (saveChatsCookie === 'true') {
+      saveChatsToggle.checked = true;
+    } else {
+      saveChatsToggle.checked = false;
+    }
+  }
+
+  // Generate unique ID
+  function genId() {
+    return 'chat_' + Math.random().toString(36).slice(2, 10);
+  }
+
+  // Create a new chat and select it
+  function createNewChat() {
+    const newChat = {
+      id: genId(),
+      title: 'New Chat',
+      messages: []
+    };
+    chats.unshift(newChat);
+    activeChatId = newChat.id;
+    renderChatList();
+    renderActiveChat();
+    saveToCookies();
+  }
+
+  // Render chat list on sidebar
+  function renderChatList() {
+    chatListEl.innerHTML = '';
+    chats.forEach(chat => {
+      const item = document.createElement('div');
+      item.classList.add('chatItem');
+      if (chat.id === activeChatId) item.classList.add('active');
+      item.setAttribute('role', 'listitem');
+      item.setAttribute('tabindex', '0');
+      item.dataset.chatId = chat.id;
+
+      // Title span
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'chatTitle';
+      titleSpan.textContent = chat.title;
+      item.appendChild(titleSpan);
+
+      // Options button with menu
+      const optionsBtn = document.createElement('button');
+      optionsBtn.className = 'chatOptionsBtn';
+      optionsBtn.setAttribute('aria-label', 'Chat options');
+      optionsBtn.innerHTML = '⋮';
+      item.appendChild(optionsBtn);
+
+      // Options menu
+      const menu = document.createElement('div');
+      menu.className = 'chatOptionsMenu';
+      menu.innerHTML = `
+        <button class="renameBtn">Rename</button>
+        <button class="deleteBtn">Delete</button>
+      `;
+      item.appendChild(menu);
+
+      // Event listeners
+      item.addEventListener('click', (e) => {
+        if (e.target === optionsBtn || optionsBtn.contains(e.target)) {
+          // Toggle menu
+          if (chatOptionsOpenId && chatOptionsOpenId !== chat.id) {
+            closeChatOptionsMenu(chatOptionsOpenId);
+          }
+          menu.classList.toggle('show');
+          chatOptionsOpenId = menu.classList.contains('show') ? chat.id : null;
+          e.stopPropagation();
+        } else if (!menu.contains(e.target)) {
+          selectChat(chat.id);
+        }
+      });
+      optionsBtn.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          optionsBtn.click();
+        }
+      });
+
+      menu.querySelector('.renameBtn').addEventListener('click', () => {
+        const newTitle = prompt('Rename chat:', chat.title);
+        if (newTitle && newTitle.trim() !== '') {
+          chat.title = newTitle.trim();
+          renderChatList();
+          if (chat.id === activeChatId) {
+            mainHeaderTitle.textContent = chat.title;
+          }
+          saveToCookies();
+        }
+        menu.classList.remove('show');
+      });
+      menu.querySelector('.deleteBtn').addEventListener('click', () => {
+        if (confirm('Delete this chat? This cannot be undone.')) {
+          chats = chats.filter(c => c.id !== chat.id);
+          if (activeChatId === chat.id) {
+            activeChatId = chats.length ? chats[0].id : null;
+          }
+          renderChatList();
+          renderActiveChat();
+          saveToCookies();
+        }
+      });
+
+      chatListEl.appendChild(item);
+    });
+  }
+
+  // Close any open chat options menus
+  function closeChatOptionsMenu(chatId) {
+    const chatItem = chatListEl.querySelector(`.chatItem[data-chat-id="${chatId}"]`);
+    if (!chatItem) return;
+    const menu = chatItem.querySelector('.chatOptionsMenu');
+    if (menu) menu.classList.remove('show');
+    chatOptionsOpenId = null;
+  }
+
+  // Select a chat and show messages
+  function selectChat(chatId) {
+    if (chatId === activeChatId) return;
+    activeChatId = chatId;
+    renderChatList();
+    renderActiveChat();
+    saveToCookies();
+  }
+
+  // Render messages of active chat
+  function renderActiveChat() {
+    chatContainer.innerHTML = '';
+    const activeChat = chats.find(c => c.id === activeChatId);
+    if (!activeChat) {
+      mainHeaderTitle.textContent = 'Welcome to FreeSearch';
+      return;
+    }
+    mainHeaderTitle.textContent = activeChat.title;
+    activeChat.messages.forEach(msg => {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('msg');
+      msgDiv.classList.add(msg.sender === 'user' ? 'user' : 'bot');
+      msgDiv.innerHTML = sanitize(msg.text);
+      chatContainer.appendChild(msgDiv);
+    });
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  // Append a new message to active chat and render
+  function appendMessage(sender, text) {
+    if (!activeChatId) {
+      createNewChat();
+    }
+    const activeChat = chats.find(c => c.id === activeChatId);
+    if (!activeChat) return;
+    activeChat.messages.push({ sender, text });
+    renderActiveChat();
+    saveToCookies();
+  }
+
+  // Send user message and request bot response
+  async function handleSend() {
+    let question = input.value.trim();
+    if (!question) return;
+    appendMessage('user', question);
+    input.value = '';
+    input.disabled = true;
+    sendBtn.disabled = true;
+
+    try {
+      // Use DuckDuckGo API + GPT-2 fallback (simulate)
+      const botReply = await getBotReply(question);
+      appendMessage('bot', botReply);
+    } catch (err) {
+      appendMessage('bot', "I'm sorry, I couldn't process your request. Please try again.");
+    } finally {
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  // Simulate AI reply with DuckDuckGo instant answer + fallback
+  async function getBotReply(query) {
+  try {
+    // Fetch summary (first paragraph)
+    const summaryRes = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+    if (!summaryRes.ok) throw new Error('Not found');
+    const summaryData = await summaryRes.json();
+
+    if (summaryData.type === 'disambiguation' || !summaryData.extract) {
+      return "I'm not sure about that.";
+    }
+
+    // Extract first paragraph and thumbnail image if available
+    let reply = summaryData.extract;
+    if (summaryData.thumbnail && summaryData.thumbnail.source) {
+      reply = `<img src="${summaryData.thumbnail.source}" alt="Image of ${summaryData.title}" style="max-width:100%;border-radius:12px;margin-bottom:8px;" /><br>${reply}`;
+    }
+
+    return reply;
+  } catch (e) {
+    return "I'm not sure about that.";
+  }
+}
+
+
+  // Simple fallback GPT-2 style response simulation (mock)
+  async function fallbackGPT2Reply(query) {
+    // Simulated delay
+    await new Promise(r => setTimeout(r, 1500));
+    // Basic canned response for demonstration (replace with real AI or API)
+    return `idk use google`;
+  }
+
+  // Toggle sidebar visibility
+  sidebarToggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+  });
+
+  // Send message on button click or Enter key
+  sendBtn.addEventListener('click', () => {
+    handleSend();
+  });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  });
+
+  // New chat button
+  newChatBtn.addEventListener('click', () => {
+    createNewChat();
+  });
+
+  // Refresh chats button (just re-renders list & active chat)
+  refreshChatsBtn.addEventListener('click', () => {
+    renderChatList();
+    renderActiveChat();
+  });
+
+  // Settings button toggle
+  settingsBtn.addEventListener('click', () => {
+    settingsOverlay.classList.add('show');
+    settingsOverlay.focus();
+  });
+  closeSettingsBtn.addEventListener('click', () => {
+    settingsOverlay.classList.remove('show');
+  });
+
+  // Dark mode toggle
+  darkModeToggle.addEventListener('change', () => {
+    if (darkModeToggle.checked) {
+      document.body.classList.add('light');
+    } else {
+      document.body.classList.remove('light');
+    }
+    saveToCookies();
+  });
+
+  // Save chats toggle (currently no disabling logic, just save setting)
+  saveChatsToggle.addEventListener('change', () => {
+    saveToCookies();
+  });
+
+  // Clear cookies button
+  clearCookiesBtn.addEventListener('click', () => {
+    if (confirm('Clear all saved chats and settings? This cannot be undone.')) {
+      cookieUtil.del('freesearch_chats');
+      cookieUtil.del('freesearch_activeChatId');
+      cookieUtil.del('freesearch_darkMode');
+      cookieUtil.del('freesearch_saveChats');
+      location.reload();
+    }
+  });
+
+  // Inquiry button opens Google Form in new tab
+  inquiryBtn.addEventListener('click', () => {
+    window.open('https://docs.google.com/forms/d/e/1FAIpQLSey_form_link_here/viewform', '_blank', 'noopener');
+  });
+
+  // Cookie consent acceptance
+  acceptCookiesBtn.addEventListener('click', () => {
+    cookieConsentGiven = true;
+    cookieConsentBanner.style.display = 'none';
+    // Now load and save settings
+    loadFromCookies();
+    if (!chats.length) createNewChat();
+    else renderChatList();
+    renderActiveChat();
+  });
+
+function checkCookieConsent() {
+  const cookieConsentBanner = document.getElementById('cookieConsentBanner');
+  const consent = cookieUtil.get('freesearch_cookieConsent');
+
+  if (consent === 'yes') {
+    // User has already given consent, hide banner
+    cookieConsentBanner.style.display = 'none';
+    cookieConsentGiven = true;
+
+    // Load chat history and UI
+    loadFromCookies();
+
+    if (!chats.length) {
+      createNewChat();
+    } else {
+      renderChatList();
+      renderActiveChat();
+    }
+  } else {
+    // Consent not given, show banner to prompt user
+    cookieConsentGiven = false;
+    cookieConsentBanner.style.display = 'flex';
+  }
+}
+
+
+  // On first accept, save consent cookie
+  acceptCookiesBtn.addEventListener('click', () => {
+    cookieUtil.set('freesearch_cookieConsent', 'yes', 365);
+  });
+
+  // Clicking outside chat options menus closes them
+  document.body.addEventListener('click', () => {
+    if (chatOptionsOpenId) {
+      closeChatOptionsMenu(chatOptionsOpenId);
+    }
+  });
+
+  // Initialize
+  checkCookieConsent();
+
+  // Accessibility focus trap for settings overlay
+  settingsOverlay.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      settingsOverlay.classList.remove('show');
+    }
+  });
+
+  // Initial sidebar state: open on wide screens
+  if (window.innerWidth >= 768) {
+    sidebar.classList.remove('collapsed');
+  }
+
+  // Keyboard shortcut: Ctrl+N to start new chat
+  window.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key.toLowerCase() === 'n') {
+      e.preventDefault();
+      createNewChat();
+      sidebar.classList.remove('collapsed');
+      input.focus();
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
-
