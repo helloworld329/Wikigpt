@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game Hub</title>
+
+  <!-- Lexend Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #0d0d0d;
+      color: #fff;
+      font-family: 'Lexend', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 30px;
+      color: #00ffe7;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 30px;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .card {
+      background: #1a1a1a;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+      border: 2px solid #333;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 15px #00ffe7;
+      border-color: #00ffe7;
+    }
+
+    .card img {
+      width: 140px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .card a {
+      text-decoration: none;
+      color: #00ffe7;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    @media (max-width: 500px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .card img {
+        width: 100%;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎮 My Game Hub</h1>
+
+  <div class="grid">
+    <div class="card">
+      <a href="https://eaglecraft.net/" target="_blank">
+        <img src="https://eaglecraft.net/images/screenshot.png" alt="Eaglecraft">
+        Eaglecraft
+      </a>
+    </div>
+
+    <div class="card">
+      <a href="https://www.minecraft.net/" target="_blank">
+        <img src="https://www.minecraft.net/content/dam/games/minecraft/key-art/Minecraft-xbox-one.jpg" alt="Minecraft">
+        Minecraft
+      </a>
+    </div>
+
+    <div class="card">
+      <a href="https://bloxd.io/" target="_blank">
+        <img src="https://bloxd.io/assets/img/bloxdio_logo.png" alt="Bloxd.io">
+        Bloxd.io
+      </a>
+    </div>
+
+    <div class="card">
+      <a href="https://www.xbox.com/en-CA/play" target="_blank">
+        <img src="https://compass-ssl.xbox.com/assets/0d/18/0d187b47-5ac2-4a98-93f1-e326facd3212.jpg?n=XCG-Marketing-0_Game-1084_960x540.jpg" alt="Xbox Cloud Gaming">
+        Xbox Cloud Gaming
+      </a>
+    </div>
+
+    <div class="card">
+      <a href="https://poki.com/" target="_blank">
+        <img src="https://images.poki.com/logo.png" alt="Poki">
+        Poki
+      </a>
+    </div>
+
+    <div class="card">
+      <a href="https://www.crazygames.com/" target="_blank">
+        <img src="https://images.crazygames.com/crazygames/logo.png" alt="CrazyGames">
+        CrazyGames
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>
